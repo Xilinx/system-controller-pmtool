@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Advanced Micro Devices, Inc.  All rights reserved.
+# Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
 # SPDX-License-Identifier: MIT
 
 from bokeh.plotting import figure, output_file, show
@@ -18,8 +18,8 @@ import pm_client
 curdoc().title = app_tile
 
 handle = pm_client.pm
-board = handle.GetBoardInfo()
-deviceName = board["Product Name"]
+board = handle.getboardinfo()
+deviceName = board["data"]["Product Name"]
 
 Version = Div(text=f""" <p class="Version_info" style="position: fixed; bottom: 0; right: 30px; font-size: x-small;">{Version}</p> """)
 BUTTON_WIDTH=70
@@ -133,13 +133,16 @@ def read_device_data():
     global device_data
     global ps_temp_value
     global total_power
-    data = handle.GetValuesAll()
-    device_data = data.get(deviceName)
-    total_power = handle.GetPowersAll()
+    data = handle.getvalueall()
+    device_data = data["data"].get(deviceName)
+    Railstotalpower = handle.getpowerall()
+    total_power = Railstotalpower["data"]
     try:
-        ps_temp = handle.GetSysmonTemperatures()
-        if "TEMP" in ps_temp:
-            ps_temp_value = ps_temp["TEMP"]
+        list_temp = handle.listtemperature()
+        if list_temp['data']:
+            ps_temp = handle.gettemperature(list_temp['data'][0])
+        if "TEMP" in ps_temp["data"]:
+            ps_temp_value = ps_temp["data"]["TEMP"]
     except Exception as e:
         pass
 
@@ -290,5 +293,6 @@ curdoc().add_periodic_callback(timer, 1000)
 
 curdoc().theme = 'dark_minimal'
 curdoc().add_root(right_part)
+
 
 

@@ -1,9 +1,9 @@
-# Copyright (C) 2024 Advanced Micro Devices, Inc.  All rights reserved.
+# Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
 # SPDX-License-Identifier: MIT
 
 
 app_tile = "Power Management Dashboard"
-Version = "V 1.0"
+Version = "V 1.1"
 
 
 #enum for button type
@@ -140,5 +140,6 @@ domain_elements = [
     }
 
 ]
+
 
 

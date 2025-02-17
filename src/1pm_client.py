@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Advanced Micro Devices, Inc.  All rights reserved.
+# Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
 # SPDX-License-Identifier: MIT
 
 
 class PM_Client(object):
     PM = None
 
-    def GetValuesAll(self):
+    def getvalueall(self):
         """
         Gets the boards's all domain's rails sensor values
 
@@ -13,6 +13,8 @@ class PM_Client(object):
         :return: The board's all rails sensor values of the Rail in json formatted
         """
         data = {
+            "status": "success",
+            "data": {
             "VCK190": [
                 {
                     "FPD": {
@@ -141,87 +143,116 @@ class PM_Client(object):
                     }
                 }
         ]
-        }
+        },
+            "message": "Operation completed successfully."
+          }
         return data
 
-    def GetBoardInfo(self):
+    def getboardinfo(self):
         board = {
+            "status": "success",
+            "data": {
               "Language": 0,
+              "Silicon Revision": "",
+              "Manufacturing Date": "Thu Apr 28 02:31:00 2022",
               "Manufacturer": "XILINX",
               "Product Name": "VCK190",
-              "Board Serial Number": "511201B01057",
-              "Board Part Number": "430511201",
-              "Board Revision": ""
-        }
+              "Board Serial Number": "282203141851",
+              "Board Part Number": "043123456",
+              "Board Revision": "REV_B01"
+            },
+            "message": "Operation completed successfully."
+          }
         return board
-    def GetSysmonTemperatures(self):
+    def listtemperature(self):
+        ps_list_temp = {
+            "status": "success",
+            "data": [
+                      "Versal"
+                    ],
+            "message": "Operation completed successfully."
+          }
+        return ps_list_temp
+    def gettemperature(self, name):
         ps_temp = {
+            "status": "success",
+            "data": {
                       "TEMP": 30.0,
                       "MIN": 0.0,
                       "MAX_MAX": 0.0,
                       "MIN_MIN": 0.0
-                    }
+                    },
+            "message": "Operation completed successfully."
+          }
         return ps_temp
-    def GetPowersAll(self):
+    
+    def getpowerall(self):
         total_power = {
-                          "VCK190": {
-                            "Power Domains": [
-                              {
-                                "FPD": {
-                                  "Power": 0.5539
-                                }
-                              },
-                              {
-                                "LPD": {
-                                  "Power": 0.2545
-                                }
-                              },
-                              {
-                                "PLD": {
-                                  "Power": 9.2938
-                                }
-                              },
-                              {
-                                "PMC": {
-                                  "Power": 0.4543
-                                }
-                              },
-                              {
-                                "GTM": {
-                                  "Power": 0.5312
-                                }
-                              },
-                              {
-                                "GTY": {
-                                  "Power": 0.0605
-                                }
-                              },
-                              {
-                                "FMC": {
-                                  "Power": 0.6335
-                                }
-                              },
-                              {
-                                "HBM": {
-                                  "Power": 0.4582
-                                }
-                              },
-                              {
-                                "system": {
-                                  "Power": 4.9275
-                                }
-                              },
-                              {
-                                "chip": {
-                                  "Power": 16.7441
-                                }
-                              }
-                            ],
-                            "Total Power": 33.9115
+            "status": "success",
+            "data": {
+                      "VCK190": {
+                        "Power Domains": [
+                          {
+                            "FPD": {
+                              "Power": 0.5539
+                            }
+                          },
+                          {
+                            "LPD": {
+                              "Power": 0.2545
+                            }
+                          },
+                          {
+                            "PLD": {
+                              "Power": 9.2938
+                            }
+                          },
+                          {
+                            "PMC": {
+                              "Power": 0.4543
+                            }
+                          },
+                          {
+                            "GTM": {
+                              "Power": 0.5312
+                            }
+                          },
+                          {
+                            "GTY": {
+                              "Power": 0.0605
+                            }
+                          },
+                          {
+                            "FMC": {
+                              "Power": 0.6335
+                            }
+                          },
+                          {
+                            "HBM": {
+                              "Power": 0.4582
+                            }
+                          },
+                          {
+                            "system": {
+                              "Power": 4.9275
+                            }
+                          },
+                          {
+                            "chip": {
+                              "Power": 16.7441
+                            }
                           }
-                        }
+                        ],
+                        "Total Power": 33.9115
+                      }
+                    },
+            "message": "Operation completed successfully."
+          }
+        
+        
         return total_power
 pm = PM_Client()
+
 
 
 
