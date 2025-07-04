@@ -30,7 +30,7 @@ device_data = []
 ps_temp_value = None
 total_power = {}
 
-REFRESH_TIME=4
+REFRESH_TIME=5
 count_down = REFRESH_TIME
 color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
               "mediumaquamarine", "green", "pink", "red", "blue", "white", "brown", "yellow", "orange"]
@@ -231,10 +231,12 @@ def flip():
     if plot.visible:
         count_down = 1
         plot.visible = False
+        count_down_label.visible = True
         right_part.children[2].visible = True
         Select.label = "Switch to Graph"
     else:
         plot.visible = True
+        count_down_label.visible = False
         right_part.children[2].visible = False
         Select.label = "Switch to Domains Info"
 
@@ -249,10 +251,12 @@ def timer():
     read_device_data()
     update_pm_graph()
     if count_down <= 0:
+        count_down_label.text = f"<p class='timer' >updating in a moment...</p>"
         update_power_data()
         count_down = REFRESH_TIME
     else:
         count_down -= 1
+        count_down_label.text = f"<p class='timer'>updating in {count_down+1 } sec</p>"
 
 
 
@@ -283,7 +287,8 @@ domainInfo=Column(sizing_mode="stretch_width")
 domainInfo.children.append(power_result)
 
 right_part = Column(Select,plot, power_result, Version, sizing_mode="stretch_width")
-right_part.css_classes =["dashboard"]
+finalGUI = Row(right_part,count_down_label, sizing_mode="stretch_width")
+finalGUI.css_classes =["dashboard"]
 
 flip()
 Select.on_click(flip)
@@ -292,7 +297,8 @@ timer()
 curdoc().add_periodic_callback(timer, 1000)
 
 curdoc().theme = 'dark_minimal'
-curdoc().add_root(right_part)
+curdoc().add_root(finalGUI)
+
 
 
 
