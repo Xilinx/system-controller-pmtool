@@ -12,35 +12,73 @@ from config import *
 
 from collections import deque
 import sys
-sys.path.insert(1, '/usr/share/raft/xclient/raft_services')
+import os
+import json
 
-import pm_client
 curdoc().title = app_tile
 
-handle = pm_client.pm
-board = handle.getboardinfo()
-deviceName = board["data"]["Product Name"]
+def pmcapture_busy_message_text():
+    if not os.path.exists(pmcapture_status_path):
+        return None
+    try:
+        with open(pmcapture_status_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    state = data.get("state", "idle")
+    if state != "running":
+        return None
+    summary = (data.get("capture") or {}).get("summary", "") or state
+    return pmcapture_busy_message.format(summary)
 
-Version = Div(text=f""" <p class="Version_info" style="position: fixed; bottom: 0; right: 30px; font-size: x-small;">{Version}</p> """)
-BUTTON_WIDTH=70
+PMCAPTURE_BUSY_STYLES = {
+    "color": "white",
+    "font-size": "22px",
+    "text-align": "center",
+    "white-space": "pre-line",
+}
 
-expand_buttons = {}
+_initial_busy_message = pmcapture_busy_message_text()
+if _initial_busy_message:
+    pmcapture_busy_div = Div(text=_initial_busy_message.replace("\n", "<br>"), styles=PMCAPTURE_BUSY_STYLES, sizing_mode="stretch_width")
+    _reload_trigger = Div(text="", visible=False)
+    _reload_trigger.js_on_change("text", CustomJS(code="window.location.reload();"))
 
-device_data = []
-ps_temp_value = None
-total_power = {}
+    def _check_capture_cleared():
+        if not pmcapture_busy_message_text():
+            _reload_trigger.text = _reload_trigger.text + "x"
 
-REFRESH_TIME=5
-count_down = REFRESH_TIME
-color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
-              "mediumaquamarine", "green", "pink", "red", "blue", "white", "brown", "yellow", "orange"]
+    curdoc().add_root(Row(pmcapture_busy_div, _reload_trigger, sizing_mode="stretch_width"))
+    curdoc().add_periodic_callback(_check_capture_cleared, 1000)
 
-sample_size = 120
-x = deque(range(sample_size), maxlen=sample_size)
-pm_y = []
+if not _initial_busy_message:
+    sys.path.insert(1, '/usr/share/raft/xclient/raft_services')
+    import pm_client
 
-domain_names = []
-domain_powers = []
+    handle = pm_client.pm
+    board = handle.getboardinfo()
+    deviceName = board["data"]["Product Name"]
+
+    Version = Div(text=f""" <p class="Version_info" style="position: fixed; bottom: 0; right: 30px; font-size: x-small;">{Version}</p> """)
+    BUTTON_WIDTH=70
+
+    expand_buttons = {}
+
+    device_data = []
+    ps_temp_value = None
+    total_power = {}
+
+    REFRESH_TIME=5
+    count_down = REFRESH_TIME
+    color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
+                  "mediumaquamarine", "green", "pink", "red", "blue", "white", "brown", "yellow", "orange"]
+
+    sample_size = 120
+    x = deque(range(sample_size), maxlen=sample_size)
+    pm_y = []
+
+    domain_names = []
+    domain_powers = []
 
 def groupbuttons(domain_elements1,gridWidth=1):
     gridbox = GridBox()
@@ -248,6 +286,16 @@ def update_power_data():
 def timer():
     global count_down
     global count_down_label
+    busy_message = pmcapture_busy_message_text()
+    if busy_message:
+        pmcapture_busy_div.text = busy_message.replace("\n", "<br>")
+        pmcapture_busy_div.visible = True
+        right_part.visible = False
+        count_down_label.visible = False
+        return
+    pmcapture_busy_div.visible = False
+    right_part.visible = True
+    count_down_label.visible = True
     read_device_data()
     update_pm_graph()
     if count_down <= 0:
@@ -259,45 +307,46 @@ def timer():
         count_down_label.text = f"<p class='timer'>updating in {count_down+1 } sec</p>"
 
 
+if not _initial_busy_message:
+    LPD = groupbuttons(domain_elements[0]["elements"])
+    Lowpower = Column(Column(Div(text=domain_elements[0]["group"],css_classes=["headings"]),width=80),LPD,background="#95D4A2", margin=(10,10,10,10))
+    FPD = groupbuttons(domain_elements[1]["elements"],2)
+    Fullpower = Column(Column(Div(text=domain_elements[1]["group"],css_classes=["headings"]),width=170),FPD,background="#93A5D1", margin=(10,10,0,0))
+    BPD = groupbuttons(domain_elements[2]["elements"])
+    Battpower = Column(Column(Div(text=domain_elements[2]["group"],css_classes=["headings"]),width=170),BPD,background="#E0DF9A", margin=(10,10,0,0), css_classes=["battpower"])
+    PLD = groupbuttons(domain_elements[3]["elements"],3)
+    Programmablelogic = Column(Column(Div(text=domain_elements[3]["group"],css_classes=["headings"]),width=250),PLD,background="#E2BF7E", margin=(0,10,0,10), css_classes=["programmablelogic"])
 
-LPD = groupbuttons(domain_elements[0]["elements"])
-Lowpower = Column(Column(Div(text=domain_elements[0]["group"],css_classes=["headings"]),width=80),LPD,background="#95D4A2", margin=(10,10,10,10))
-FPD = groupbuttons(domain_elements[1]["elements"],2)
-Fullpower = Column(Column(Div(text=domain_elements[1]["group"],css_classes=["headings"]),width=170),FPD,background="#93A5D1", margin=(10,10,0,0))
-BPD = groupbuttons(domain_elements[2]["elements"])
-Battpower = Column(Column(Div(text=domain_elements[2]["group"],css_classes=["headings"]),width=170),BPD,background="#E0DF9A", margin=(10,10,0,0), css_classes=["battpower"])
-PLD = groupbuttons(domain_elements[3]["elements"],3)
-Programmablelogic = Column(Column(Div(text=domain_elements[3]["group"],css_classes=["headings"]),width=250),PLD,background="#E2BF7E", margin=(0,10,0,10), css_classes=["programmablelogic"])
 
+    Preset = Button(label=default_buttons[0]["title"],button_type="primary",margin=(10,10,0,10),width =BUTTON_WIDTH, disabled = True,css_classes=["presetbtn"])
+    Select = Button(label=default_buttons[1]["title"],button_type="primary",margin=(10,10,40,10),width =BUTTON_WIDTH)
 
-Preset = Button(label=default_buttons[0]["title"],button_type="primary",margin=(10,10,0,10),width =BUTTON_WIDTH, disabled = True,css_classes=["presetbtn"])
-Select = Button(label=default_buttons[1]["title"],button_type="primary",margin=(10,10,40,10),width =BUTTON_WIDTH)
+    power_domains = Column(Column(Preset,Row(Lowpower,Column(Fullpower,Battpower)),Programmablelogic), css_classes=["all_domains"])
 
-power_domains = Column(Column(Preset,Row(Lowpower,Column(Fullpower,Battpower)),Programmablelogic), css_classes=["all_domains"])
+    read_device_data()
 
-read_device_data()
+    power_result = power_data()
+    count_down_label = Div(text="")
+    pmcapture_busy_div = Div(text="", visible=False, styles=PMCAPTURE_BUSY_STYLES, sizing_mode="stretch_width")
 
-power_result = power_data()
-count_down_label = Div(text="")
+    plot = pm_graph()
+    plot.css_classes = ['pmgraph']
 
-plot = pm_graph()
-plot.css_classes = ['pmgraph']
+    domainInfo=Column(sizing_mode="stretch_width")
+    domainInfo.children.append(power_result)
 
-domainInfo=Column(sizing_mode="stretch_width")
-domainInfo.children.append(power_result)
+    right_part = Column(Select,plot, power_result, Version, sizing_mode="stretch_width")
+    finalGUI = Row(pmcapture_busy_div,right_part,count_down_label, sizing_mode="stretch_width")
+    finalGUI.css_classes =["dashboard"]
 
-right_part = Column(Select,plot, power_result, Version, sizing_mode="stretch_width")
-finalGUI = Row(right_part,count_down_label, sizing_mode="stretch_width")
-finalGUI.css_classes =["dashboard"]
+    flip()
+    Select.on_click(flip)
 
-flip()
-Select.on_click(flip)
+    timer()
+    curdoc().add_periodic_callback(timer, 1000)
 
-timer()
-curdoc().add_periodic_callback(timer, 1000)
-
-curdoc().theme = 'dark_minimal'
-curdoc().add_root(finalGUI)
+    curdoc().theme = 'dark_minimal'
+    curdoc().add_root(finalGUI)
 
 
 
