@@ -5,6 +5,9 @@
 app_tile = "Power Management Dashboard"
 Version = "V 1.1"
 
+pmcapture_status_path = "/run/pmcapture/status.json"
+pmcapture_busy_message = "Data capture service is running. Please wait or stop the capture to continue using the " + app_tile + ".\nData Capture Service Info: {}"
+
 
 #enum for button type
 TYPE_MAJOR_BUTTON = 1
